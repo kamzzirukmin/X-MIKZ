@@ -1,0 +1,41 @@
+
+name: Build X-MIKZ APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Extract project
+        run: |
+          unzip -q X-FORZE.zip -d extracted
+          find extracted -name settings.gradle -type f
+
+      - name: Build APK
+        run: |
+          PROJECT_DIR=$(find extracted -name settings.gradle -type f -printf '%h\n' | head -n 1)
+          test -n "$PROJECT_DIR"
+          gradle -p "$PROJECT_DIR" assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: X-MIKZ-APK
+          path: extracted/**/app/build/outputs/apk/debug/app-debug.apk
+          
